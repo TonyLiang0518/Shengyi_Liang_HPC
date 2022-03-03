@@ -5,7 +5,7 @@
 #include <omp.h>
 #include "utils.h"
 
-#define BLOCK_SIZE 16
+#define BLOCK_SIZE 32
 
 // Note: matrices are stored in column major order; i.e. the array elements in
 // the (m x n) matrix C are stored in the sequence: {C_00, C_10, ..., C_m0,
@@ -25,13 +25,46 @@ void MMult0(long m, long n, long k, double *a, double *b, double *c) {
 }
 
 void MMult1(long m, long n, long k, double *a, double *b, double *c) {
-  // TODO: See instructions below
+
+  double C_ij;
+  //# pragma omp parallel shared(a,b,m,n,k) 
+  //{
+    //# pragma omp for
+    for (long bi = 0; bi < m; bi += BLOCK_SIZE) {
+        
+        for (long bj = 0; bj < n; bj += BLOCK_SIZE) {
+            
+            for (long bl = 0; bl < k; bl += BLOCK_SIZE) {
+                
+                for (long i = bi; i < ((bi+BLOCK_SIZE>m)?m:(bi+BLOCK_SIZE)); i++) {
+
+                    for (long j = bj; j < ((bj+BLOCK_SIZE>n)?n:(bj+BLOCK_SIZE)); j++) {
+                      C_ij = 0.;
+
+                      for (long l = bl; l < ((bl+BLOCK_SIZE>k)?k:(bl+BLOCK_SIZE)); l++) {
+                        C_ij += a[i+l*k] * b[l+j*n];
+
+                        //c[i+j*n] += a[i+l*k] * b[l+j*n];
+
+                      }
+                      c[i+j*n] += C_ij;
+                    }
+                  //}
+                }
+              
+            }
+          
+        }
+      
+    }
+  //}
 }
 
 int main(int argc, char** argv) {
   const long PFIRST = BLOCK_SIZE;
   const long PLAST = 2000;
   const long PINC = std::max(50/BLOCK_SIZE,1) * BLOCK_SIZE; // multiple of BLOCK_SIZE
+  //const long PINC = BLOCK_SIZE;
 
   printf(" Dimension       Time    Gflop/s       GB/s        Error\n");
   for (long p = PFIRST; p < PLAST; p += PINC) {
@@ -58,8 +91,8 @@ int main(int argc, char** argv) {
       MMult1(m, n, k, a, b, c);
     }
     double time = t.toc();
-    double flops = 0; // TODO: calculate from m, n, k, NREPEATS, time
-    double bandwidth = 0; // TODO: calculate from m, n, k, NREPEATS, time
+    double flops = NREPEATS * 2 * m * n * k / time / 1.e9; 
+    double bandwidth = NREPEATS * (2 * m * n + 4 * m * n * k) / time * sizeof(double) / 1.e9; 
     printf("%10d %10f %10f %10f", p, time, flops, bandwidth);
 
     double max_err = 0;

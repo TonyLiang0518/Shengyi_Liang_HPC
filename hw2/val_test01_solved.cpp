@@ -77,13 +77,15 @@ void f ( int n )
   x[1] = 1;
   cout << "  " << 1 << "  " << x[1] << "\n";
 
-  for ( i = 2; i <= n; i++ )
+  // Here, there is a bug of trying to read and write data at n but valid indices are 0 to n-1
+  // Bug fixed by changing <= to <
+  for ( i = 2; i < n; i++ )
   {
     x[i] = x[i-1] + x[i-2];
     cout << "  " << i << "  " << x[i] << "\n";
   }
-
-  delete [] x;
+  // Here there is a mismatch between delete[] and malloc, bug fixed by using free(x) instead of delete[]
+  free(x);
 
   return;
 }

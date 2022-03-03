@@ -78,7 +78,7 @@ void junk_data ( )
 //
 //  X = { 0, 1, 2, 3, 4, ?a, ?b, ?c, ?d, ?e }.
 //
-  for ( i = 0; i < 5; i++ )
+  for ( i = 0; i < 10; i++ )
   {
     x[i] = i;
   }
@@ -98,7 +98,8 @@ void junk_data ( )
   }
 //
 //  Print X.
-//
+// Here, the loop involves printing out uninitialized values i.e. indices 2, 5 to 9
+// Error fixed by initializing all values of x in loop at line 81
   for ( i = 0; i < 10; i++ )
   {
     cout << "  " << i << "  " << x[i] << "\n";

@@ -27,9 +27,10 @@ void MMult0(long m, long n, long k, double *a, double *b, double *c) {
 void MMult1(long m, long n, long k, double *a, double *b, double *c) {
 
   double C_ij;
-  //# pragma omp parallel shared(a,b,m,n,k) 
-  //{
-    //# pragma omp for
+  # pragma omp parallel shared(a,b,m,n,k) 
+  {
+    # pragma omp for
+    
     for (long bi = 0; bi < m; bi += BLOCK_SIZE) {
         
         for (long bj = 0; bj < n; bj += BLOCK_SIZE) {
@@ -49,7 +50,7 @@ void MMult1(long m, long n, long k, double *a, double *b, double *c) {
                       }
                       c[i+j*n] += C_ij;
                     }
-                  //}
+                  
                 }
               
             }
@@ -57,7 +58,7 @@ void MMult1(long m, long n, long k, double *a, double *b, double *c) {
         }
       
     }
-  //}
+  }
 }
 
 int main(int argc, char** argv) {

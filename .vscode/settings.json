@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "random": "cpp"
+        "random": "cpp",
+        "functional": "cpp",
+        "ratio": "cpp"
     }
 }

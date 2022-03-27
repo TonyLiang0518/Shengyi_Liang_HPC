@@ -39,12 +39,8 @@ void sin4_reference(double* sinx, const double* x) {
 
 void sin4_taylor(double* sinx, const double* x) {
   for (int i = 0; i < 4; i++) {
-    double x_abs = abs(x[i]);
-    double theta = fmod(x_abs, (M_PI*2.)) / 8;
-    double signx = (x[i] > 0)-(x[i] < 0);
-
-    //printf("%10f, %10f, %10d, %10f\n", x[i], theta, k, signx);
-
+    // Edited for x in R with 12-digits accuracy
+    double theta = fmod(x[i], (M_PI*2.)) / 8;
     double x1  = theta;
     double x2  = x1 * x1;
     double x3  = x1 * x2;
@@ -77,8 +73,8 @@ void sin4_taylor(double* sinx, const double* x) {
 
     double s2 = s*s;
     double c2 = c*c;
-
-    sinx[i] =  signx * 8. * s * c * (1. - 2.*s2) * (1. - 8. * s2 * c2);
+    // s stands for sin, c stands for cos
+    sinx[i] =  8. * s * c * (1. - 2.*s2) * (1. - 8. * s2 * c2);
     
   }
 }
@@ -89,11 +85,10 @@ void sin4_intrin(double* sinx, const double* x, double* signx, double* theta, lo
   // The definition of intrinsic functions can be found at:
   // https://software.intel.com/sites/landingpage/IntrinsicsGuide/#
 #if defined(__AVX__)
-  __m256d x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, _theta, _signx, _fifty_six, _eight;
-  _signx  = _mm256_load_pd(signx);
-  _fifty_six  = _mm256_set1_pd(56.);
-  _eight  = _mm256_set1_pd(8.);
+  // Updated computation for x in R
+  __m256d x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13;
 
+  // Compute x^1 to x^13 for 12-digits accuracy
   x1 = _mm256_load_pd(theta);
   x2  = _mm256_mul_pd(x1, x1);
   x3  = _mm256_mul_pd(x1, x2);
@@ -108,6 +103,7 @@ void sin4_intrin(double* sinx, const double* x, double* signx, double* theta, lo
   x12 = _mm256_mul_pd(x10, x2);
   x13 = _mm256_mul_pd(x11, x2);
 
+  // Compute sin(theta)
   __m256d s = x1;
   s = _mm256_add_pd(s, _mm256_mul_pd(x3 , _mm256_set1_pd(c3 )));
   s = _mm256_add_pd(s, _mm256_mul_pd(x5 , _mm256_set1_pd(c5 )));
@@ -116,6 +112,7 @@ void sin4_intrin(double* sinx, const double* x, double* signx, double* theta, lo
   s = _mm256_add_pd(s, _mm256_mul_pd(x11 , _mm256_set1_pd(c11 )));
   s = _mm256_add_pd(s, _mm256_mul_pd(x13 , _mm256_set1_pd(c13 )));
 
+  // Compute cos(theta)
   __m256d c = _mm256_set1_pd(1.);
   c = _mm256_add_pd(c, _mm256_mul_pd(x2 , _mm256_set1_pd(c2 )));
   c = _mm256_add_pd(c, _mm256_mul_pd(x4 , _mm256_set1_pd(c4 )));
@@ -124,14 +121,13 @@ void sin4_intrin(double* sinx, const double* x, double* signx, double* theta, lo
   c = _mm256_add_pd(c, _mm256_mul_pd(x10 , _mm256_set1_pd(c10 )));
   c = _mm256_add_pd(c, _mm256_mul_pd(x12 , _mm256_set1_pd(c12 )));
 
+  // Compute sin^2, cos^2, and formula sin(8 theta) = 8*sin*cos*(1-2*sin^2)*(1-8*sin^2*cos^2)
   __m256d s2 = _mm256_mul_pd(s, s);
   __m256d c2 = _mm256_mul_pd(c, c);
   __m256d term1 = _mm256_mul_pd(_mm256_set1_pd(8.), _mm256_mul_pd(s, c));
   __m256d term2 = _mm256_sub_pd(_mm256_set1_pd(1.), _mm256_mul_pd(_mm256_set1_pd(2.), s2));
   __m256d term3 = _mm256_sub_pd(_mm256_set1_pd(1.), _mm256_mul_pd(_mm256_set1_pd(8.), _mm256_mul_pd(s2, c2)));
-
   __m256d res = _mm256_mul_pd(term1, _mm256_mul_pd(term3, term2));
-  res = _mm256_mul_pd(res, _signx);
   _mm256_store_pd(sinx, res);
 
 #elif defined(__SSE2__)
@@ -188,6 +184,7 @@ int main() {
   double* sinx_taylor = (double*) aligned_malloc(N*sizeof(double));
   double* sinx_intrin = (double*) aligned_malloc(N*sizeof(double));
   double* sinx_vector = (double*) aligned_malloc(N*sizeof(double));
+  // Additional vector for pre-computed values for computation
   double* signx = (double*) aligned_malloc(N*sizeof(double));
   double* theta = (double*) aligned_malloc(N*sizeof(double));
   double x_abs;
@@ -199,7 +196,7 @@ int main() {
     sinx_vector[i] = 0;
 
     x_abs = abs(x[i]);
-    theta[i] = fmod(x_abs, (M_PI*2.)) / 8.;
+    theta[i] = fmod(x[i], (M_PI*2.)) / 8.;
     signx[i] = (x[i] > 0)-(x[i] < 0);
   }
 

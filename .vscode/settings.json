@@ -5,6 +5,8 @@
         "ratio": "cpp",
         "cmath": "cpp",
         "chrono": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "algorithm": "cpp",
+        "xlocale": "cpp"
     }
 }

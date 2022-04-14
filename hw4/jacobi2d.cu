@@ -142,7 +142,7 @@ double* Laplace_Solve(long N) {
     }
     
     // Update to u while computing residual in one loop
-    # pragma omp parallel for shared(u_new, u, N, f, hsq) private(i,j,diff) num_threads(num) reduction(+:result) 
+    # pragma omp parallel for shared(u_new, u, N, f, hsq) private(i,j) num_threads(num)
     for (j = 1; j < N+1; j++) {
       for (i = 1; i < N+1 ; i++) {
         u[j+i*(N+2)] = u_new[j+i*(N+2)];

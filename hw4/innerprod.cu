@@ -35,7 +35,7 @@ void Check_CUDA_Error(const char *message){
 }
 
 int main() {
-  long N = (1UL<<14); // 2^25
+  long N = (1UL<<25); // 2^25
 
   double* x = (double*) malloc(N * sizeof(double));
   double* y = (double*) malloc(N * sizeof(double));
